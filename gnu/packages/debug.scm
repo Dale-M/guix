@@ -175,6 +175,7 @@ tools that process C/C++ code.")
                    ("aarch64-linux"  "aarch64")
                    ("armhf-linux"    "arm")
                    ("mips64el-linux" "mips64el")
+                   ("powerpc-linux"  "ppc")
                    ;; Prevent errors when querying this package on unsupported
                    ;; platforms, e.g. when running "guix package --search="
                    (_                "UNSUPPORTED"))))
@@ -250,6 +251,7 @@ down the road.")
                    ("aarch64-linux"  "aarch64")
                    ("armhf-linux"    "arm")
                    ("mips64el-linux" "mips64el")
+                   ("powerpc-linux"  "ppc")
                    ;; Prevent errors when querying this package on unsupported
                    ;; platforms, e.g. when running "guix package --search="
                    (_                "UNSUPPORTED"))))
