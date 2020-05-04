@@ -642,7 +642,9 @@ for ARCH and optionally VARIANT, or #f if there is no such configuration."
                            ;; See kernel-config for an example.
                            (extra-version #f)
                            (configuration-file #f)
-                           (defconfig "defconfig")
+                           (defconfig (system->defconfig
+                                        (or (%current-target-system)
+                                            (%current-system))))
                            (extra-options %default-extra-linux-options)
                            (patches (list %boot-logo-patch)))
   (make-linux-libre* version
@@ -663,7 +665,9 @@ for ARCH and optionally VARIANT, or #f if there is no such configuration."
                             ;; See kernel-config for an example.
                             (extra-version #f)
                             (configuration-file #f)
-                            (defconfig "defconfig")
+                            (defconfig (system->defconfig
+                                         (or (%current-target-system)
+                                             (%current-system))))
                             (extra-options %default-extra-linux-options))
   (package
     (name (if extra-version
@@ -803,7 +807,7 @@ It has been modified to remove all non-free binary blobs.")
 (define-public linux-libre-5.4
   (make-linux-libre* linux-libre-5.4-version
                      linux-libre-5.4-source
-                     '("x86_64-linux" "i686-linux" "armhf-linux" "aarch64-linux" "riscv64-linux")
+                     '("x86_64-linux" "i686-linux" "armhf-linux" "aarch64-linux" "riscv64-linux" "powerpc-linux")
                      #:configuration-file kernel-config))
 
 (define-public linux-libre-version         linux-libre-5.4-version)
