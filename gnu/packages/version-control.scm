@@ -6,7 +6,7 @@
 ;;; Copyright © 2015, 2016 Mathieu Lirzin <mthl@gnu.org>
 ;;; Copyright © 2014, 2015, 2016 Mark H Weaver <mhw@netris.org>
 ;;; Copyright © 2014, 2016, 2019 Eric Bavier <bavier@member.fsf.org>
-;;; Copyright © 2015, 2016, 2017, 2018, 2019 Efraim Flashner <efraim@flashner.co.il>
+;;; Copyright © 2015, 2016, 2017, 2018, 2019, 2020 Efraim Flashner <efraim@flashner.co.il>
 ;;; Copyright © 2015, 2018 Kyle Meyer <kyle@kyleam.com>
 ;;; Copyright © 2015, 2017, 2018, 2020 Ricardo Wurmus <rekado@elephly.net>
 ;;; Copyright © 2016, 2017 Leo Famulari <leo@famulari.name>
@@ -1501,7 +1501,11 @@ control to Git repositories.")
                          ;; The test suite takes a long time and produces little
                          ;; output by default.  Prevent timeouts due to silence.
                          "-v"))
-               #t))))))
+               #t))))
+       ;; Tests on powerpc-linux take more than 10 hours.
+       #:tests? ,(if (string=? "powerpc-linux" (or (%current-system)
+                                                   (%current-target-system)))
+                   '#f '#t)))
     ;; The following inputs are only needed to run the tests.
     (native-inputs
      `(("python-nose" ,python-nose)
