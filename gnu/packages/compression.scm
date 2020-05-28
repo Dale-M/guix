@@ -1814,9 +1814,10 @@ non-Windows systems without running the actual installer using wine.")
     (source
      (origin
        (method git-fetch)
-       (uri (git-reference
-             (url "https://github.com/google/brotli.git")
-             (commit (string-append "v" version))))
+       (uri
+        (git-reference
+         (url "https://github.com/google/brotli.git")
+         (commit (string-append "v" version))))
        (file-name (git-file-name name version))
        (sha256
         (base32 "1811b55wdfg4kbsjcgh1kc938g118jpvif97ilgrmbls25dfpvvw"))))
@@ -1828,7 +1829,8 @@ non-Windows systems without running the actual installer using wine.")
            ;; The build tools put a 'static' suffix on the static libraries, but
            ;; other applications don't know how to find these.
            (lambda* (#:key outputs #:allow-other-keys)
-             (let ((lib (string-append (assoc-ref %outputs "out") "/lib/")))
+             (let* ((lib (string-append (assoc-ref %outputs "out")
+                                        "/lib/")))
                (rename-file (string-append lib "libbrotlicommon-static.a")
                             (string-append lib "libbrotlicommon.a"))
                (rename-file (string-append lib "libbrotlidec-static.a")
@@ -1837,19 +1839,19 @@ non-Windows systems without running the actual installer using wine.")
                             (string-append lib "libbrotlienc.a"))
                #t))))
        #:configure-flags
-       (list ;; Defaults to "lib64" on 64-bit archs.
-             (string-append "-DCMAKE_INSTALL_LIBDIR="
-                            (assoc-ref %outputs "out") "/lib"))))
-    (home-page "https://github.com/google/brotli")
+       (list
+        ;; Defaults to "lib64" on 64-bit archs.
+        (string-append "-DCMAKE_INSTALL_LIBDIR=" (assoc-ref %outputs "out")
+                       "/lib"))))
     (synopsis "General-purpose lossless compression")
-    (description "This package provides the reference implementation of Brotli,
-a generic-purpose lossless compression algorithm that compresses data using a
+    (description "Google-Brotli is a reference implementation of Brotli, a
+generic-purpose lossless compression algorithm that compresses data using a
 combination of a modern variant of the LZ77 algorithm, Huffman coding and 2nd
 order context modeling, with a compression ratio comparable to the best
 currently available general-purpose compression methods.  It is similar in speed
-with @code{deflate} but offers more dense compression.
-
-The specification of the Brotli Compressed Data Format is defined in RFC 7932.")
+with @code{deflate} but offers more dense compression.  The specification of the
+Brotli Compressed Data Format is defined in RFC 7932.")
+    (home-page "https://brotli.org/")
     (license license:expat)))
 
 (define-public brotli
