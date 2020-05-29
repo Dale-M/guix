@@ -161,6 +161,7 @@
   #:use-module (gnu packages rust)
   #:use-module (gnu packages samba)
   #:use-module (gnu packages scanner)
+  #:use-module (gnu packages sdl)
   #:use-module (gnu packages selinux)
   #:use-module (gnu packages slang)
   #:use-module (gnu packages speech)
@@ -4711,70 +4712,95 @@ throughout GNOME for API documentation).")
     (source
      (origin
        (method url-fetch)
-       (uri (string-append "mirror://gnome/sources/cogl/"
-                           (version-major+minor version) "/"
-                           "cogl-" version ".tar.xz"))
+       (uri
+        (string-append "mirror://gnome/sources/cogl/"
+                       (version-major+minor version) "/"
+                       "cogl-" version ".tar.xz"))
        (sha256
         (base32 "0x8v4n61q89qy27v824bqswpz6bmn801403w2q3pa1lcwk9ln4vd"))))
     ;; NOTE: mutter exports a bundled fork of cogl, so when making changes to
     ;; cogl, corresponding changes may be appropriate in mutter as well.
-    (build-system gnu-build-system)
+    (build-system glib-or-gtk-build-system)
+    (outputs '("out" "doc"))
+    (arguments
+     `(#:disallowed-references (,xorg-server-for-tests)
+       #:configure-flags
+       (list
+        "--enable-cogl-gst"
+        "--enable-wayland-egl-platform"
+        "--enable-wayland-egl-server"
+        "--enable-gtk-doc"
+        (string-append "--with-html-dir="
+                       (assoc-ref %outputs "doc")
+                       "/share/gtk-doc/html")
+        (string-append "--with-gl-libname="
+                       (assoc-ref %build-inputs "mesa")
+                       "/lib/libGL.so"))
+       #:phases
+       (modify-phases %standard-phases
+         (add-after 'unpack 'patch-docbook-xml
+           (lambda* (#:key inputs #:allow-other-keys)
+             (let* ((xmldoc (string-append (assoc-ref inputs "docbook-xml")
+                                           "/xml/dtd/docbook")))
+               (with-directory-excursion "doc/reference"
+                 (substitute*
+                     '("cogl/cogl-docs.xml.in"
+                       "cogl/blend-strings.xml"
+                       "cogl-gst/cogl-gst-docs.xml.in"
+                       "cogl-2.0-experimental/cogl-2.0-experimental-docs.xml.in"
+                       "cogl-2.0-experimental/blend-strings.xml")
+                   (("http://.*/docbookx\\.dtd")
+                    (string-append xmldoc "/docbookx.dtd"))))
+               #t)))
+         (add-before 'check 'start-xorg-server
+           (lambda* (#:key tests? inputs #:allow-other-keys)
+             (if tests?
+                 (begin
+                   ;; The test suite requires a running X server.
+                   (system (format #f "~a/bin/Xvfb :1 +extension GLX &"
+                                   (assoc-ref inputs "xorg-server")))
+                   (setenv "DISPLAY" ":1")
+                   #t)
+                 (format #t "test suite not run~%"))
+             #t)))))
     (native-inputs
-     `(("glib:bin" ,glib "bin")     ; for glib-mkenums
+     `(("docbook-xml" ,docbook-xml-4.1.2)
+       ("gettext" ,gettext-minimal)
+       ("glib:bin" ,glib "bin")
        ("gobject-introspection" ,gobject-introspection)
-       ("xorg-server" ,xorg-server-for-tests)
-       ("pkg-config" ,pkg-config)))
+       ("gtk-doc" ,gtk-doc)
+       ("pkg-config" ,pkg-config)
+       ("python-wrapper" ,python-wrapper)
+       ("xorg-server" ,xorg-server-for-tests)))
+    (inputs
+     `(("libdrm" ,libdrm)))
     (propagated-inputs
-     `(("glib" ,glib)
-       ("gdk-pixbuf" ,gdk-pixbuf)
+     `(("cairo" ,cairo)
+       ("glib" ,glib)
+       ("gdk-pixbuf+svg" ,gdk-pixbuf+svg)
+       ("gstreamer" ,gstreamer)
+       ("gst-plugins-base" ,gst-plugins-base)
        ("libx11" ,libx11)
        ("libxext" ,libxext)
        ("libxfixes" ,libxfixes)
        ("libxdamage" ,libxdamage)
        ("libxcomposite" ,libxcomposite)
-       ("libxrandr" ,libxrandr)))
-    (inputs
-     `(("mesa" ,mesa)
-       ("cairo" ,cairo)
+       ("libxrandr" ,libxrandr)
+       ("mesa" ,mesa)
        ("pango" ,pango)
-       ("gstreamer" ,gstreamer)
-       ("gst-plugins-base" ,gst-plugins-base)
        ("wayland" ,wayland)))
-    (arguments
-     `(#:disallowed-references (,xorg-server-for-tests)
-       #:configure-flags (list "--enable-cogl-gst"
-                               "--enable-wayland-egl-platform"
-                               "--enable-wayland-egl-server"
-
-                               ;; Arrange to pass an absolute file name to
-                               ;; dlopen for libGL.so.
-                               (string-append "--with-gl-libname="
-                                              (assoc-ref %build-inputs "mesa")
-                                              "/lib/libGL.so"))
-       #:phases
-       (modify-phases %standard-phases
-         (add-before 'check 'start-xorg-server
-                     (lambda* (#:key tests? inputs #:allow-other-keys)
-                       (if tests?
-                           (begin
-                             ;; The test suite requires a running X server.
-                             (system (format #f "~a/bin/Xvfb :1 +extension GLX &"
-                                             (assoc-ref inputs "xorg-server")))
-                             (setenv "DISPLAY" ":1")
-                             #t)
-                           (format #t "test suite not run~%"))
-                       #t)))))
+    (synopsis "Hardware accelerated 3D graphics API")
+    (description "Cogl is a small library for using 3D graphics hardware for
+rendering.  The API departs from the flat state machine style of OpenGL and is
+designed to make it easy to write orthogonal components that can render without
+stepping on each others toes.")
     (home-page "https://www.cogl3d.org")
-    (synopsis "Object oriented GL/GLES Abstraction/Utility Layer")
-    (description
-     "Cogl is a small library for using 3D graphics hardware to draw pretty
-pictures.  The API departs from the flat state machine style of OpenGL and is
-designed to make it easy to write orthogonal components that can render
-without stepping on each others toes.")
-    (license (list license:expat       ; most of the code
-                   license:bsd-3       ; cogl/cogl-point-in-poly.c
-                   license:sgifreeb2.0 ; cogl-path/tesselator/
-                   license:asl2.0))))  ; examples/android/
+    (license
+     (list
+      license:expat                     ; most of the code
+      license:bsd-3                     ; cogl/cogl-point-in-poly.c
+      license:sgifreeb2.0               ; cogl-path/tesselator/
+      license:asl2.0))))  ; examples/android/
 
 (define-public clutter
   (package
