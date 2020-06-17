@@ -10,6 +10,7 @@
 ;;; Copyright © 2018 Roel Janssen <roel@gnu.org>
 ;;; Copyright © 2019 Ricardo Wurmus <rekado@elephly.net>
 ;;; Copyright © 2020 Jakub Kądziołka <kuba@kadziolka.net>
+;;; Copyright © 2020 Dale Mellor <guix-devel-0brg6b@rdmp.org>
 ;;;
 ;;; This file is part of GNU Guix.
 ;;;
@@ -32,10 +33,12 @@
   #:use-module (guix download)
   #:use-module (guix git-download)
   #:use-module (guix utils)
+  #:use-module (guix build-system cmake)
   #:use-module (guix build-system gnu)
   #:use-module (guix build-system go)
   #:use-module (gnu packages)
   #:use-module (gnu packages compression)
+  #:use-module (gnu packages gawk)
   #:use-module (gnu packages golang)
   #:use-module (gnu packages guile)
   #:use-module (gnu packages kerberos)
@@ -258,3 +261,32 @@ not offer a replacement for libcurl.")
 Guile to do client-side URL transfers, like requesting documents from HTTP or
 FTP servers.  It is based on the curl library.")
    (license license:gpl3+)))
+
+(define-public  curlpp
+  (package
+   (name "curlpp")
+   (version "0.8.1")
+   (source  (origin
+             (method  git-fetch)
+             (uri (git-reference
+                   (url "https://github.com/jpbarrette/curlpp.git")
+                   (commit "v0.8.1")))
+             (sha256
+              (base32 "1b0ylnnrhdax4kwjq64r1fk0i24n5ss6zfzf4hxwgslny01xiwrk"))))
+   (build-system  cmake-build-system)
+   (arguments  `(#:phases (modify-phases %standard-phases (delete 'check))))
+   (propagated-inputs `(("curl" ,curl)))
+   (synopsis  "C++ wrapper around libcURL")
+   (description
+    "A free and easy-to-use client-side C++ URL transfer library,
+supporting FTP, FTPS, HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP. The
+curlpp library supports HTTPS certificates, HTTP POST, HTTP PUT, FTP
+uploading, kerberos, HTTP form based upload, proxies, cookies, user+password
+authentication, file transfer resume, http proxy tunneling and more!  The
+curlpp library is highly portable, it builds and works identically on numerous
+platforms, including Solaris, NetBSD, FreeBSD, OpenBSD, Darwin, HPUX, IRIX,
+AIX, Tru64, Linux, Windows, Amiga, OS/2, BeOs, Mac OS X, Ultrix, QNX, OpenVMS,
+RISC OS, Novell NetWare, DOS and more... curlpp is free, thread-safe, IPv6
+compatible, feature rich, well supported and fast.")
+   (home-page  "http://www.curlpp.org")
+   (license  license:x11-style)))
