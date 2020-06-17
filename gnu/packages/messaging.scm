@@ -571,7 +571,7 @@ compromised.")
     (version "1.8.1")
     (source (origin
               (method url-fetch)
-              (uri (string-append "http://znc.in/releases/archive/znc-"
+              (uri (string-append "https://znc.in/releases/archive/znc-"
                                   version ".tar.gz"))
               (sha256
                (base32
@@ -605,7 +605,7 @@ compromised.")
        ("perl" ,perl)
        ("python" ,python)
        ("zlib" ,zlib)))
-    (home-page "https://znc.in")
+    (home-page "https://wiki.znc.in/ZNC")
     (synopsis "IRC network bouncer")
     (description "ZNC is an @dfn{IRC network bouncer} or @dfn{BNC}.  It can
 detach the client from the actual IRC server, and also from selected channels.

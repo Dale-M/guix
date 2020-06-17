@@ -7384,7 +7384,7 @@ indentation guides in Emacs:
 (define-public emacs-elpy
   (package
     (name "emacs-elpy")
-    (version "1.32.0")
+    (version "1.34.0")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -7393,12 +7393,23 @@ indentation guides in Emacs:
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "0f00mdnzx6xqwni86rgvaa6sfkwyh62xfbwz8qsar15j0j6vc2dj"))))
+                "1x1z298axbh4xalssnq9nkf2z1sdgmx839vb01xz18kr9lfavx1x"))))
     (build-system emacs-build-system)
     (arguments
      `(#:include (cons* "^elpy/[^/]+\\.py$" "^snippets\\/" %default-include)
        #:phases
        (modify-phases %standard-phases
+         ;; The following tests fail when building with Emacs 27 (see:
+         ;; https://github.com/jorgenschaefer/elpy/issues/1812).
+         (add-after 'unpack 'disable-problematic-tests
+           (lambda _
+             (substitute* "test/elpy-company-backend-test.el"
+               (("elpy-company-backend-should-add-shell-candidates.*" all)
+                (string-append all "  (skip-unless nil)\n")))
+             (substitute* "test/elpy-folding-fold-comments-test.el"
+               (("elpy-fold-at-point-should-fold-and-unfold-comments.*" all)
+                (string-append all "  (skip-unless nil)\n")))
+             #t))
          ;; The default environment of the RPC uses Virtualenv to install
          ;; Python dependencies from PyPI.  We don't want/need this in Guix.
          (add-before 'check 'do-not-use-virtualenv
